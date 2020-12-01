@@ -1,0 +1,443 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Dec  1 16:33:24 2020
+
+@author: amaurychesne
+"""
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+ 
+
+
+#fonction qui trie une liste dans l'odre croissant
+def tri_liste(liste):
+    L = list(liste) 
+    N = len(L)
+    for n in range(1,N):
+        cle = L[n]
+        j = n-1
+        while j>=0 and L[j] > cle:
+            L[j+1] = L[j] 
+            j = j-1
+        L[j+1] = cle
+    return L
+
+ 
+
+#fonction qui à partir des dates rentrées par l'utlisateur et la liste de temps trié, renvoi une liste
+#avec les date+horaire comprisent dans cette intervalle sous forme d'une liste
+def inter(liste,debut,fin):
+    debut=debut+'00:00:00 +0200'
+    fin=fin+'23:59:59 +0200'
+    L=[]
+    for i in liste:
+        if i>=debut and i<=fin:
+            L.append(i)
+    return L
+
+ 
+
+#fonction qui à partir de la liste de temps trier (a), de la donnée qu'on veut(b)
+#et de l'intervalle de temps que l'on veut(c) nous renvoi toutes les données que 
+#l'on veut sur l'intervalle de temps que l'on veut
+def tri_int(a,b,c):
+        L=[]
+        j=0
+        for i in c:
+            while a[j] != i :
+                j=j+1
+            L.append(b[j])
+            j=0
+        return L
+    
+def maxi(liste):
+    maxi = -100
+    for i in liste:
+        if i >= maxi:
+            maxi = i
+    return maxi
+
+ 
+
+def mini(liste):
+    mini = liste[0]
+    for i in liste:
+        if i <= mini:
+            mini = i
+    return mini
+
+ 
+
+def med(l):
+    if len(l) % 2 == 0 :
+        return (l[int(len(l)/2)]+l[int(len(l)/2 +1)])/2
+    else:
+        return l[int((len(l))//2 +1)]
+
+ 
+
+def moy(l):
+    a=0
+    for i in l:
+        a=a+i
+    return a/len(l)
+
+ 
+
+def variance(l):
+    va=0
+    for i in l:
+        va=va +(i-moy(l))**2
+    return va/len(l)
+
+ 
+
+def ecart_t(l):
+    return variance(l)**0.5
+
+ 
+
+#fonction qui calcule la temperature de rosé en fct de la temperature et de l'humidite
+def T_rosee(l,h):
+    L=[]
+    for i in range (0,len(l)):
+        a=(17.27*l[i])/(237.7+l[i])+np.log(h[i]/100)
+        L.append((237.7*a)/(17.27-a))
+    return L
+
+ 
+
+def humidex(T,rosee):
+    H=[]
+    for i in range (0,len(T)):
+        a=5417.7530*(1/273.16-1/(273.16+rosee[i]))
+        H.append(T[i]+0.5555*(6.11*np.exp(a)-10))
+    return H
+
+ 
+
+def correlation(a,b):
+    a1=tri_int(temps_trier,a,temps)
+    b1=tri_int(temps_trier,b,temps)
+    co=0
+    for i in range (0,len(a1)):
+             co=co+a1[i]*b1[i]
+    co=co/len(a1) - (moy(a1)*moy(b1))
+    co=co/(ecart_t(a1)*ecart_t(b1))
+    return co
+
+ 
+
+#fonction qui tri une donnée par capteur
+def tri_capteur(don):
+    cap1=[]
+    cap2=[]
+    cap3=[]
+    cap4=[]
+    cap5=[]
+    cap6=[]
+    for i in range (0,len(capteur)):
+        if capteur[i]==1:
+            cap1.append(don[i])
+        if capteur[i]==2:
+                cap2.append(don[i])
+        if capteur[i]==3:
+            cap3.append(don[i])
+        if capteur[i]==4:
+            cap4.append(don[i])
+        if capteur[i]==5:
+            cap5.append(don[i])
+        else:
+            cap6.append(don[i])
+    return cap1,cap2,cap3,cap4,cap5,cap6
+
+ 
+
+                
+result=pd.read_csv("EIVP_KM.csv",sep=';')
+t=result['sent_at'].tolist()
+temps_trier=tri_liste(t)
+co=result['co2'].tolist()
+lum=result['lum'].tolist()
+bruit=result['noise'].tolist()
+capteur=result['id'].tolist()
+temperature=result['temp'].tolist()
+humidity=result['humidity'].tolist()
+
+ 
+
+date=str(input("voulez vous rentrer une date de début et de fin ?"))
+if date =='oui':   
+   h_debut=str(input("entrer la date de début (AAAA-MM-JJ)"))
+   h_fin=str(input("entrer la date de fin (AAAA-MM-JJ)"))
+else:
+    h_debut=temps_trier[0]
+    h_fin=temps_trier[-1]
+    
+data1=str(input('Quelle donnée voulez vous regarder entre bruit, température, humidité, lumière et co2 ?' ))    
+if data1 == 'bruit':
+    data= bruit
+if data1== 'température':
+    data = temperature
+if data1 == 'humidité':
+    data = humidity
+if data1 == 'lumière':
+    data = lum
+if data1 =='co2':
+    data= co
+
+ 
+
+data1er=str(input('Quelle première donnée voulez vous regarder entre bruit, température, humidité, lumière et co2 pour l indice de corélation ?' ))
+if data1er == 'bruit':
+    data_1= bruit
+if data1er== 'température':
+    data_1 =temperature
+if data1er == 'humidité':
+    data_1 = humidity
+if data1er == 'lumière':
+    data_1 = lum
+if data1er =='co2':
+    data_1 = co
+    
+data2eme=str(input('Quelle seconde donnée voulez vous regarder entre bruit, température, humidité, lumière et co2 pour l indice de corélation ?' ))
+if data2eme == 'bruit':
+    data_2= bruit
+if data2eme== 'température':
+    data_2 = temperature
+if data2eme == 'humidité':
+    data_2 = humidity
+if data2eme == 'lumière':
+    data_2 = lum
+if data2eme =='co2':
+    data_2 = co
+    
+   
+temps=inter(temps_trier,h_debut,h_fin)
+data_int=tri_int(t,data,temps)
+
+ 
+
+
+humidity_trier=tri_int(temps_trier,humidity,temps)
+
+ 
+
+tempe_trier=tri_int(temps_trier,temperature,temps)
+Trose=T_rosee(tempe_trier,humidity_trier)
+
+ 
+
+ 
+
+cap_bruit=tri_capteur(bruit)
+cap_temperature=tri_capteur(temperature)
+cap_humidite=tri_capteur(humidity)
+cap_lumiere=tri_capteur(lum)
+cap_co=tri_capteur(co)
+
+ 
+
+plt.plot(temps,data_int,label=data1)
+y2=[maxi(data_int) for k in range(len(temps))] 
+y3=[mini(data_int) for k in range(len(temps))]
+l2=plt.plot(temps,y2 , ls='--')
+l3=plt.plot(temps,y3 , ls='--')
+plt.title('Donnée en fonctions du temps')
+plt.xlabel('Temps')
+plt.ylabel('donnée')
+plt.legend()
+plt.figlegend((l2, l3), ('Maximum', 'Minimum'), 'upper left')
+plt.tight_layout()
+plt.legend()
+plt.show()
+print('Le maximum est de ',maxi(data_int))
+print('Le minimum est de', mini(data_int))
+print('La médiane est de',med(data_int))
+print('La moyenne est de',moy(data_int))
+print('La variance est de',variance(data_int))
+print("L'écart type est de",ecart_t(data_int))
+plt.close()
+plt.plot(temps,humidex(tempe_trier,Trose),label="humidex")
+y2=[maxi(humidex(tempe_trier,Trose)) for k in range(len(temps))] 
+y3=[mini(humidex(tempe_trier,Trose)) for k in range(len(temps))]
+l2=plt.plot(temps,y2 , ls='--')
+l3=plt.plot(temps,y3 , ls='--')
+plt.title('Humidex en fonction du temps')
+plt.xlabel('Temps')
+plt.ylabel('Humidex')
+plt.legend()
+plt.figlegend((l2, l3), ('Maximum', 'Minimum'), 'upper left')
+plt.tight_layout()
+plt.legend()
+plt.show()
+plt.close()
+#affiche correlation + graphique entre les 2 données que l'on veut
+print('lindice de correlation est de',correlation(data_1,data_2))
+plt.plot(temps,tri_int(temps_trier,data_1,temps))
+plt.plot(temps,tri_int(temps_trier,data_2,temps))
+plt.legend()
+plt.show()
+
+ 
+
+#affichage graphique des capteurs pour le co2
+plt.plot(temps,tri_int(temps_trier,tri_capteur(co)[0],temps),label="capteur 1")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(co)[1],temps),label="capteur 2")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(co)[2],temps),label="capteur 3")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(co)[3],temps),label="capteur 4")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(co)[4],temps),label="capteur 5")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(co)[5],temps),label="capteur 6")
+plt.legend()
+plt.title("co2 mesuré par les capteurs")
+plt.show()
+
+ 
+
+#affichage graphique des capteurs pour la lumiere
+plt.plot(temps,tri_int(temps_trier,tri_capteur(lum)[0],temps),label="capteur 1")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(lum)[1],temps),label="capteur 2")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(lum)[2],temps),label="capteur 3")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(lum)[3],temps),label="capteur 4")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(lum)[4],temps),label="capteur 5")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(lum)[5],temps),label="capteur 6")
+plt.legend()
+plt.title("lumière mesuré par les capteurs")
+plt.show()
+
+ 
+
+#affichage graphique des capteurs pour le bruit
+plt.plot(temps,tri_int(temps_trier,tri_capteur(bruit)[0],temps),label="capteur 1")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(bruit)[1],temps),label="capteur 2")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(bruit)[2],temps),label="capteur 3")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(bruit)[3],temps),label="capteur 4")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(bruit)[4],temps),label="capteur 5")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(bruit)[5],temps),label="capteur 6")
+plt.legend()
+plt.title("bruit mesuré par les capteurs")
+plt.show()
+
+ 
+
+#affichage graphique des capteurs pour la temperature
+plt.plot(temps,tri_int(temps_trier,tri_capteur(temperature)[0],temps),label="capteur 1")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(temperature)[1],temps),label="capteur 2")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(temperature)[2],temps),label="capteur 3")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(temperature)[3],temps),label="capteur 4")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(temperature)[4],temps),label="capteur 5")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(temperature)[5],temps),label="capteur 6")
+plt.legend()
+plt.title("température mesuré par les capteurs")
+plt.show()
+
+ 
+
+#affichage graphique des capteurs pour l'humidite
+plt.plot(temps,tri_int(temps_trier,tri_capteur(humidity)[0],temps),label="capteur 1")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(humidity)[1],temps),label="capteur 2")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(humidity)[2],temps),label="capteur 3")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(humidity)[3],temps),label="capteur 4")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(humidity)[4],temps),label="capteur 5")
+plt.plot(temps,tri_int(temps_trier,tri_capteur(humidity)[5],temps),label="capteur 6")
+plt.legend()
+plt.title("humidité mesuré par les capteurs")
+plt.show()
+
+#étude analytique des similaritées entre capteur
+def similarite(liste_temps_triee,cap,don,h_debut,h_fin):
+    a=str()
+    Longueur=[]
+    intervalle_temps=inter(liste_temps_triee,h_debut,h_fin)
+    c1,c2,c3,c4,c5,c6=tri_capteur(don)  #on repartie les doonnées acquérit par les différents capteurs
+    tc1,tc2,tc3,tc4,tc5,tc6=tri_int(liste_temps_triee,c1,intervalle_temps),tri_int(liste_temps_triee,c2,intervalle_temps),tri_int(liste_temps_triee,c3,intervalle_temps),tri_int(liste_temps_triee,c4,intervalle_temps),tri_int(liste_temps_triee,c5,intervalle_temps),tri_int(liste_temps_triee,c6,intervalle_temps)  #tri les listes chronologiquement sur un intervalle choisi
+    lc1,lc2,lc3,lc4,lc5,lc6=len(tc1),len(tc2),len(tc3),len(tc4),len(tc5),len(tc6)
+    Longueur.append(lc1),Longueur.append(lc2),Longueur.append(lc3),Longueur.append(lc4),Longueur.append(lc5),Longueur.append(lc6)
+    longueur_mini=mini(Longueur)-1 #pour ne pas etre out of range on compare la longueur des liste des capteurs et on prend la longueur la plus courte pour comparer
+    for k in range(0,longueur_mini):
+        d12,d13,d14,d15,d16,d23,d24,d25,d26,d34,d35,d36,d45,d46,d56=[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
+        d12.append(np.abs(tc1[k]-tc2[k])),d13.append(np.abs(tc1[k]-tc3[k])),d14.append(np.abs(tc1[k]-tc4[k])),d15.append(np.abs(tc1[k]-tc5[k])),d16.append(np.abs(tc1[k]-tc6[k]))
+        d23.append(np.abs(tc2[k]-tc3[k])),d24.append(np.abs(tc2[k]-tc4[k])),d25.append(np.abs(tc2[k]-tc5[k])),d26.append(np.abs(tc2[k]-tc6[k]))
+        d34.append(np.abs(tc3[k]-tc4[k])),d35.append(np.abs(tc3[k]-tc5[k])),d36.append(np.abs(tc3[k]-tc6[k]))
+        d45.append(np.abs(tc4[k]-tc5[k])),d46.append(np.abs(tc4[k]-tc6[k]))
+        d56.append(np.abs(tc5[k]-tc6[k]))  #on fait la différence en valeur absolue entre les capteurs , on va ensuite faire la moyene des différence des listes des capteurs comparées et ainsi determiner le capteur le plus similaire
+        moy12,moy13,moy14,moy15,moy16,moy23,moy24,moy25,moy26,moy34,moy35,moy36,moy45,moy46,moy56=moy(d12),moy(d13),moy(d14),moy(d15),moy(d16),moy(d23),moy(d24),moy(d25),moy(d26),moy(d34),moy(d35),moy(d36),moy(d45),moy(d46),moy(d56)
+        s1,s2,s3,s4,s5,s6=[moy12,moy13,moy14,moy15,moy16],[moy12,moy23,moy24,moy25,moy26],[moy13,moy23,moy34,moy35,moy36],[moy14,moy24,moy34,moy45,moy46],[moy15,moy25,moy35,moy45,moy56],[moy16,moy26,moy36,moy46,moy56]
+        if mini(s1)==moy12:
+           a+= str('Le capteur 2 est le plus similaire au 1, ')
+        elif mini(s1)==moy13:
+           a+= str('Le capteur 3 est le plus similaire au 1, ')
+        elif mini(s1)==moy14:
+           a+=str('Le capteur 4 est le plus similaire au 1, ')
+        elif mini(s1)==moy15:
+            a+=str('Le capteur 5 est le plus similaire au 1, ')
+        elif mini(s1)==moy16:
+           a+= str('Le capteur 6 est le plus similaire au 1, ')
+        elif mini(s2)==moy12:
+           a+= str('Le capteur 1 est le plus similaire au 2, ')
+        elif mini(s2)==moy23:
+           a+= str('Le capteur 3 est le plus similaire au 2, ')
+        elif mini(s2)==moy24:
+           a+= str('Le capteur 4 est le plus similaire au 2, ')
+        elif mini(s2)==moy25:
+           a+= str('Le capteur 5 est le plus similaire au 2, ')
+        elif mini(s2)==moy26:
+           a+= str('Le capteur 6 est le plus similaire au 2, ')
+        elif mini(s3)==moy13:
+           a+= str('Le capteur 1 est le plus similaire au 3, ')
+        elif mini(s3)==moy23:
+           a+= str('Le capteur 2 est le plus similaire au 3, ')
+        elif mini(s3)==moy34:
+           a+= str('Le capteur 4 est le plus similaire au 3, ')
+        elif mini(s3)==moy35:
+           a+= str('Le capteur 5 est le plus similaire au 3, ')
+        elif mini(s3)==moy36:
+           a+= str('Le capteur 6 est le plus similaire au 3, ')
+        elif mini(s4)==moy14:
+           a+= str('Le capteur 1 est le plus similaire au 4, ')
+        elif mini(s4)==moy24:
+           a+= str('Le capteur 2 est le plus similaire au 4, ')
+        elif mini(s4)==moy34:
+           a+= str('Le capteur 3 est le plus similaire au 4, ')
+        elif mini(s4)==moy45:
+           a+= str('Le capteur 5 est le plus similaire au 4, ')
+        elif mini(s4)==moy46:
+           a+= str('Le capteur 6 est le plus similaire au 4, ')
+        elif mini(s5)==moy15:
+           a+= str('Le capteur 1 est le plus similaire au 5, ')
+        elif mini(s5)==moy25:
+           a+= str('Le capteur 2 est le plus similaire au 5, ')
+        elif mini(s5)==moy35:
+           a+= str('Le capteur 3 est le plus similaire au 5, ')
+        elif mini(s5)==moy45:
+           a+= str('Le capteur 4 est le plus similaire au 5, ')
+        elif mini(s5)==moy56:
+           a+= str('Le capteur 6 est le plus similaire au 5, ')
+        elif mini(s6)==moy16:
+           a+= str('Le capteur 1 est le plus similaire au 6, ')
+        elif mini(s6)==moy26:
+           a+=str('Le capteur 2 est le plus similaire au 6, ')
+        elif mini(s6)==moy36:
+           a+= str('Le capteur 3 est le plus similaire au 6, ')
+        elif mini(s6)==moy46:
+           a+= str('Le capteur 4 est le plus similaire au 6, ')
+        else:
+           a+= str('Le capteur 5 est le plus similaire au 6, ')
+    return a
+       
+
+ 
+
+ 
+
+ 
+
+print("Pour le co2 : ",similarite(temps_trier,capteur,co,h_debut,h_fin))
+print("Pour la lumière : ",similarite(temps_trier,capteur,lum,h_debut,h_fin))
+print("Pour le bruit : ",similarite(temps_trier,capteur,bruit,h_debut,h_fin))
+print("Pour la température : ",similarite(temps_trier,capteur,temperature,h_debut,h_fin))
+print("Pour l'humidité : ",similarite(temps_trier,capteur,humidity,h_debut,h_fin))
